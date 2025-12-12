@@ -6,7 +6,7 @@ import store from "./store";
 function App() {
   return (
     <Provider store={store}>
-      <Router  basename="/admin">
+      <Router >
         <Routes />
       </Router>
     </Provider>
