@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AiTwotoneEdit } from "react-icons/ai";
@@ -322,7 +324,6 @@ const saveLogos = async () => {
                 {type.includes("text") && editingLogos && (
                   <input
                     type="text"
-                    
                     placeholder="Enter text"
                     value={wordmarkText[key] || ""}
                     disabled={logoFiles[key]}
