@@ -35,20 +35,10 @@ export const PartnerEditPage = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-<<<<<<< HEAD
     axios
       .get(`${import.meta.env.VITE_API_URL}/partners/questions`)
       .then((res) => setAllQuestions(res.data?.questions || []))
       .catch((err) => console.error("Error fetching questions:", err));
-=======
-    if (id) dispatch(fetchPartnerById(id));
-  }, [id]);
-
-  useEffect(() => {
-    axios.get().then((res) => {
-      setAllQuestions(res.data.questions || []);
-    });
->>>>>>> ea6c267 (Solve issue)
   }, []);
 
   useEffect(() => {
