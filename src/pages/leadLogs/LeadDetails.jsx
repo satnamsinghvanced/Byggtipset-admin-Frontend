@@ -9,11 +9,8 @@ import {
   updateLeadStatus,
 } from "../../store/slices/leadLogsSlice";
 import api from "../../api/axios";
-const escapeCSV = (value) => {
-  if (value === null || value === undefined) return "";
-  const str = String(value).replace(/"/g, '""');
-  return `"${str}"`;
-};
+
+const BASE_URL = "https://api.byggtipset.no/";
 
 const LeadDetails = () => {
   const { id } = useParams();
@@ -52,7 +49,6 @@ const LeadDetails = () => {
     dispatch(updateLeadStatus({ leadId: id, status: newStatus }));
   };
 
-  // ✅ Handle per-partner lead price update
   const handlePartnerPriceChange = async (partnerId, value) => {
     const updated = partnerPrices.map((p) =>
       p.partnerId === partnerId ? { ...p, leadPrice: Number(value) } : p
@@ -68,7 +64,7 @@ const LeadDetails = () => {
 
       if (res.data.success) {
         toast.success("Partner lead price updated!");
-        setProfit(res.data.data.profit); // update total profit from backend
+        setProfit(res.data.data.profit);
       } else {
         toast.error(res.data.message || "Failed to update price");
       }
@@ -79,12 +75,10 @@ const LeadDetails = () => {
   };
 
   const handleProfitChange = (e) => {
-    const newProfit = Number(e.target.value);
-    setProfit(newProfit);
-    // Optional: If you still want to update total profit manually
-    // axios.put("/update-lead-profit", { leadId: id, profit: newProfit })
+    setProfit(Number(e.target.value));
   };
-  const exportToCSV = () => {
+
+ const exportToCSV = () => {
     if (!selectedLead) return;
 
     const rows = [];
@@ -227,6 +221,81 @@ const LeadDetails = () => {
   const values = selectedLead.dynamicFields?.[0]?.values || {};
   const leadLog = selectedLead.log ? JSON.parse(selectedLead.log) : null;
 
+  const formatValue = (val, i) => {
+    if (val === null || val === undefined) return "-";
+
+    // Boolean
+    if (typeof val === "boolean") return val ? "Yes" : "No";
+
+    // React element
+    if (React.isValidElement(val)) return val;
+
+    // File
+    if (val instanceof File) return val.name;
+
+    // Image string
+    if (typeof val === "string") {
+      if (val.startsWith("uploads/")) {
+        return (
+          <img
+            key={i}
+            src={`${BASE_URL}${val}`}
+            alt="Upload"
+            style={{
+              width: 70,
+              height: 70,
+              objectFit: "cover",
+              borderRadius: 8,
+              marginRight: 6,
+            }}
+          />
+        );
+      }
+      return val;
+    }
+
+    // Object with url
+    if (val?.url) {
+      const url =
+        val.url.startsWith("uploads/")
+          ? `${BASE_URL}${val.url}`
+          : val.url;
+
+      return (
+        <img
+          key={i}
+          src={url}
+          alt="Upload"
+          style={{
+            width: 70,
+            height: 70,
+            objectFit: "cover",
+            borderRadius: 8,
+            marginRight: 6,
+          }}
+        />
+      );
+    }
+
+    // Array
+    if (Array.isArray(val)) {
+      if (!val.length) return "-";
+
+      return val.map((item, idx) => formatValue(item, idx));
+    }
+
+    // Object safe stringify
+    if (typeof val === "object") {
+      try {
+        return JSON.stringify(val);
+      } catch {
+        return "-";
+      }
+    }
+
+    return String(val);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -262,7 +331,6 @@ const LeadDetails = () => {
             </div>
           ))}
         </div>
-
         {/* Partners */}
         <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
           <p className="text-xs font-semibold uppercase text-slate-500 mb-2">
@@ -413,6 +481,7 @@ const LeadDetails = () => {
             />
           </div>
         </div>
+        {/* Form Values */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
           <p className="text-xs font-semibold uppercase text-slate-500 mb-2">
             Form Filled Details ({values.selectedFormTitle || "N/A"})
@@ -420,22 +489,23 @@ const LeadDetails = () => {
 
           <div className="grid gap-4 md:grid-cols-2 text-sm">
             {Object.entries(values).map(([key, value]) => {
-              if (!value) return null;
+              if (value == null) return null;
 
-              // Map field keys to friendly names
               let label = key;
+              let displayValue = value;
+
               switch (key) {
                 case "selectedFormType":
                   label = "Lead Type Id";
-                  value = (
-                    <span className="">
+                  displayValue = (
+                    <span>
                       {selectedLead.formNumber || 0}
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(
                             selectedLead.formNumber
                           );
-                          toast.info("Lead Type ID is  copied!");
+                          toast.info("Lead Type ID copied!");
                         }}
                         className="px-2 py-1 ml-1 text-xs bg-slate-200 hover:bg-slate-300 rounded gap-2"
                       >
@@ -444,6 +514,7 @@ const LeadDetails = () => {
                     </span>
                   );
                   break;
+
                 case "selectedFormTitle":
                   label = "Lead Type";
                   break;
@@ -472,58 +543,21 @@ const LeadDetails = () => {
               return (
                 <p key={key}>
                   <strong>{label}:</strong>{" "}
-                  {(() => {
-  if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
-  }
-
-  if (Array.isArray(value)) {
-    return value.length
-      ? value
-          .map(v =>
-            typeof v === "object"
-              ? (() => {
-                  try {
-                    return JSON.stringify(v);
-                  } catch {
-                    return "[object]";
-                  }
-                })()
-              : String(v)
-          )
-          .join(", ")
-      : "-";
-  }
-
-  if (typeof value === "object") {
-    // Only stringify plain objects
-    const isPlainObject =
-      Object.getPrototypeOf(value) === Object.prototype;
-
-    if (!isPlainObject) return "[object]";
-
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return "[object]";
-    }
-  }
-
-  return String(value);
-})()}
-
+                  {formatValue(displayValue)}
                 </p>
               );
             })}
           </div>
         </div>
+
+        {/* Lead Log */}
         {leadLog && (
           <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 mt-6">
             <p className="text-xs font-semibold uppercase text-slate-500 mb-2">
               Lead Processing Log
             </p>
 
-            {Object.entries(leadLog.steps || {}).map(([stepKey, step], idx) => (
+            {Object.entries(leadLog.steps || {}).map(([_, step], idx) => (
               <div key={idx} className="mb-4">
                 <p className="text-sm font-medium text-slate-700 mb-1">
                   {step.name} ({step.description})
@@ -544,11 +578,6 @@ const LeadDetails = () => {
                       ))}
                     </div>
                   ))}
-                  {step.summary && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      <strong>Summary:</strong> {JSON.stringify(step.summary)}
-                    </p>
-                  )}
                 </div>
               </div>
             ))}
