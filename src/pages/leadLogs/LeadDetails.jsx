@@ -471,7 +471,47 @@ const LeadDetails = () => {
 
               return (
                 <p key={key}>
-                  <strong>{label}:</strong> {value}
+                  <strong>{label}:</strong>{" "}
+                  {(() => {
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (Array.isArray(value)) {
+    return value.length
+      ? value
+          .map(v =>
+            typeof v === "object"
+              ? (() => {
+                  try {
+                    return JSON.stringify(v);
+                  } catch {
+                    return "[object]";
+                  }
+                })()
+              : String(v)
+          )
+          .join(", ")
+      : "-";
+  }
+
+  if (typeof value === "object") {
+    // Only stringify plain objects
+    const isPlainObject =
+      Object.getPrototypeOf(value) === Object.prototype;
+
+    if (!isPlainObject) return "[object]";
+
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "[object]";
+    }
+  }
+
+  return String(value);
+})()}
+
                 </p>
               );
             })}
