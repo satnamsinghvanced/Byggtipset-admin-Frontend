@@ -56,10 +56,10 @@ const CreateFooterSelectPage = () => {
       href = item.slug ? `/artikler/${item.categoryId.slug}/${item.slug}` : `/artikler/${item._id}`;
     } else if (tab === "places") {
       title = item.name || item.title || "Place";
-      href = `/entreprenør/${item.slug || item._id}`;
+      href = `/entreprenor/${item.slug || item._id}`;
     } else if (tab === "companies") {
       title = item.name || item.companyName || "Company";
-      href = `/entreprenør/${item.slug || item._id}`;
+      href = `/entreprenor/${item.slug || item._id}`;
     }
 
     try {
