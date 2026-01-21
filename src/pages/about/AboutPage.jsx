@@ -128,6 +128,8 @@ const AboutPage = () => {
   };
 
   return (
+    
+    // About Page Section
     <Section title="About Page" onSave={handleSave} loading={loading}>
       {loading ? (
         <div className="animate-pulse space-y-4">
@@ -186,7 +188,8 @@ const AboutPage = () => {
             className="rounded-2xl [&_.ql-container]:rounded-b-2xl [&_.ql-toolbar]:rounded-t-2xl"
           />
 
-          {/* SEO SECTION */}
+          {/* // SEO SETTINGS */}
+
           <div className="border-t pt-6">
             <h2 className="text-xl font-bold mb-4">SEO Settings</h2>
 

@@ -12,7 +12,6 @@ const LoginForm = () => {
   const { is_loading, auth_user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .email("Please enter valid email")
