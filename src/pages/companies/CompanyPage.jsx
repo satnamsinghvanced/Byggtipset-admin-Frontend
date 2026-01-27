@@ -114,18 +114,27 @@ export const Company = () => {
       const result = await dispatch(importCompanies(formData)).unwrap();
       // console.log(result);
 
-      const { inserted = 0, skipped = 0 } = result;
+      const { inserted = 0, skipped = 0, skippedItems = [] } = result;
 
       let message = "Companies imported successfully";
 
       if (inserted > 0 && skipped > 0) {
-        message = `${inserted} inserted, ${skipped} skipped (duplicates)`;
+        message = `${inserted} inserted, ${skipped} skipped (check for duplicates or missing names)`;
       } else if (inserted > 0) {
         message = `${inserted} companies inserted successfully`;
       } else if (skipped > 0) {
-        message = `${skipped} companies skipped (already exist)`;
+        const missingNamesCount = skippedItems.filter(item => item.reason === "Missing company name").length;
+        const duplicateCount = skippedItems.filter(item => item.reason === "Duplicate company").length;
+
+        if (missingNamesCount > 0 && duplicateCount > 0) {
+          message = `${skipped} skipped (${missingNamesCount} missing names, ${duplicateCount} already exist)`;
+        } else if (missingNamesCount > 0) {
+          message = `${skipped} companies skipped (check CSV headers/missing names)`;
+        } else {
+          message = `${skipped} companies skipped (already exist)`;
+        }
       } else {
-        message = "No companies inserted";
+        message = "No companies inserted. Please check your file format.";
       }
 
       toast.success(message);
