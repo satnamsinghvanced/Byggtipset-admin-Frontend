@@ -32,7 +32,7 @@ export const ArticleCategoryPage = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, [dispatch, page, limit, search]); // <-- add search dependency
+  }, [dispatch, page, limit, search]); 
 
   const handleDeleteCategory = async () => {
     if (!categoryToDelete) return;
